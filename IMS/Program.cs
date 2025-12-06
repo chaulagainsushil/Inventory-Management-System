@@ -56,6 +56,21 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 
+// 1. Add CORS services - Read allowed origins from appsettings.json
+builder.Services.AddCors(options =>
+{
+    var allowedOriginsCommaSeparated = builder.Configuration.GetSection("AllowedOrigins").Get<string>() ?? string.Empty;
+
+    var allowedOrigins = allowedOriginsCommaSeparated.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    options.AddPolicy("MyAppPolicy", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyMethod()                 // GET, POST, PUT, DELETE, etc.
+            .AllowAnyHeader()                 // Content-Type, Authorization, etc.
+            .AllowCredentials();              // IMPORTANT for authentication cookies/tokens
+    });
+});
+
 //to use the content from appsetting.json
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSetting>();
 
@@ -123,6 +138,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddApplicationServices();
 
 var app = builder.Build();
+
+app.UseCors("MyAppPolicy");  // Use your policy name here
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

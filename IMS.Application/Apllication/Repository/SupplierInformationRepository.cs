@@ -19,12 +19,9 @@ namespace IMS.APPLICATION.Apllication.Repository
             _context = context;
         }
 
-        public async Task<IEnumerable<SuppliersInfromation>> GetAllAsync()
+        public async Task<List<SuppliersInfromation>> GetAllAsync()
         {
-            return await _context.SuppliersInfromation
-                .Where(s => s.IsActive)
-                .OrderByDescending(s => s.CreatedAt)
-                .ToListAsync();
+            return await _context.SuppliersInfromation.ToListAsync();
         }
 
         public async Task<SuppliersInfromation?> GetByIdAsync(int id)

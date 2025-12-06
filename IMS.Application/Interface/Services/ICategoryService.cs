@@ -11,5 +11,6 @@ namespace IMS.APPLICATION.Interface.Services
         Task<Category> CreateAsync(CategoryCreateDto dto);
         Task<Category?> UpdateAsync(int id, CategoryUpdateDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<CategoryCountDto> GetCategoryCountAsync();
     }
 }

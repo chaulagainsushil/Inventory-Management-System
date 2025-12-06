@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IMS.Controllers
 {
-    
+
     [Route("api/[controller]")]
     [ApiController]
     public class CategoryController : ControllerBase
@@ -60,6 +60,14 @@ namespace IMS.Controllers
             if (!result)
                 return NotFound("Category not found");
             return Ok("Category deleted successfully");
+        }
+        
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("count")]
+        public async Task<IActionResult> GetCategoryCount()
+        {
+            var result = await _service.GetCategoryCountAsync();
+            return Ok(result);
         }
     }
 }

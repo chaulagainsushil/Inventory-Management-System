@@ -1,5 +1,6 @@
 ﻿using IMS.APPLICATION.Interface.Services;
 using IMS.COMMON.Dtos;
+using IMS.COMMON.Dtos.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,8 +21,8 @@ namespace IMS.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var suppliers = await _service.GetAllAsync();
-            return Ok(suppliers);
+            var result = await _service.GetAllAsync();
+            return Ok(result);
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{id}")]
@@ -40,7 +41,7 @@ namespace IMS.Controllers
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] SupplierInformationDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] SupplireInfromationDisplayDto dto)
         {
             var updated = await _service.UpdateAsync(id, dto);
             if (updated == null) return NotFound("Supplier not found");

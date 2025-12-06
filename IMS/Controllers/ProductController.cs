@@ -63,5 +63,12 @@ namespace IMS.Controllers
                 return NotFound("Product not found");
             return Ok("Product deleted successfully");
         }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("Productcount")]
+        public async Task<IActionResult> GetTotalProductCount()
+        {
+            var result = await _service.GetProductCountAsync();
+            return Ok(result);
+        }
     }
 }

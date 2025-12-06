@@ -9,5 +9,6 @@ namespace IMS.APPLICATION.Interface.Repository
         Task AddAsync(Category category);
         Task UpdateAsync(Category category);
         Task DeleteAsync(int id);
+        Task<int> GetCategoryCountAsync();
     }
 }

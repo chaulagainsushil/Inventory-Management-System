@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IMS.Repository.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251118025148_postgresql")]
-    partial class postgresql
+    [Migration("20251202151857_hello1")]
+    partial class hello1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -208,7 +208,7 @@ namespace IMS.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("ReorderLevel")
+                    b.Property<int>("ReoredLevel")
                         .HasColumnType("integer");
 
                     b.Property<string>("Sku")

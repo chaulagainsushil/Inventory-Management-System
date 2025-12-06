@@ -205,7 +205,7 @@ namespace IMS.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("ReorderLevel")
+                    b.Property<int>("ReoredLevel")
                         .HasColumnType("integer");
 
                     b.Property<string>("Sku")

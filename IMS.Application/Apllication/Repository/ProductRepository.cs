@@ -57,5 +57,10 @@ namespace IMS.APPLICATION.Apllication.Repository
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<int> GetTotalProductCountAsync()
+        {
+            return await _context.Product.CountAsync();
+        }
     }
 }

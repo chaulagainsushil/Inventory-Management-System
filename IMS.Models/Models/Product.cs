@@ -21,7 +21,7 @@ namespace IMS.Models.Models
         public string Sku { get; set; }
         public string QuantityPerUnit { get; set; }
         public bool IsActive { get; set; }
-        public int ReorderLevel { get; set; }
+        public int ReoredLevel { get; set; }
         public DateTime CreatedAt { get; set; }
         [ForeignKey("CategoryId")]
         public Category Category { get; set; }

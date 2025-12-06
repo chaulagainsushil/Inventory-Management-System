@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IMS.Repository.Migrations
 {
     /// <inheritdoc />
-    public partial class postgresql : Migration
+    public partial class hello1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -122,7 +122,7 @@ namespace IMS.Repository.Migrations
                     Sku = table.Column<string>(type: "text", nullable: false),
                     QuantityPerUnit = table.Column<string>(type: "text", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    ReorderLevel = table.Column<int>(type: "integer", nullable: false),
+                    ReoredLevel = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>

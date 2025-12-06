@@ -9,7 +9,7 @@ namespace IMS.APPLICATION.Interface.Repository
 {
     public interface ISupplierRepository
     {
-        Task<IEnumerable<SuppliersInfromation>> GetAllAsync();
+        Task<List<SuppliersInfromation>> GetAllAsync();
         Task<SuppliersInfromation?> GetByIdAsync(int id);
         Task AddAsync(SuppliersInfromation supplier);
         Task UpdateAsync(SuppliersInfromation supplier);

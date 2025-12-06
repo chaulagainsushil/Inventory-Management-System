@@ -55,5 +55,9 @@ namespace IMS.APPLICATION.Application.Repository
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task<int> GetCategoryCountAsync()
+        {
+            return await _context.Category.CountAsync();
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using IMS.APPLICATION.Interface.Repository;
+﻿using IMS.APPLICATION.Apllication.Repository;
+using IMS.APPLICATION.Interface.Repository;
 using IMS.APPLICATION.Interface.Services;
 using IMS.COMMON.Dtos;
 using IMS.Models.Models;
@@ -36,8 +37,10 @@ namespace IMS.APPLICATION.Apllication.Services
                 ProductName = dto.ProductName,
                 Description = dto.Description,
                 PricePerUnit = dto.PricePerUnit,
-                QuantityPerUnit =dto.QuantityPerUnit,
-                Sku=dto.Sku,
+                QuantityPerUnit = dto.QuantityPerUnit,
+                SupplierId = dto.SupplierId,
+                ReoredLevel = dto.ReorderLevel,
+                Sku = dto.Sku,
                 CategoryId = dto.CategoryId,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -68,6 +71,16 @@ namespace IMS.APPLICATION.Apllication.Services
 
             await _repository.DeleteAsync(id);
             return true;
+        }
+
+        public async Task<ProductCountDto> GetProductCountAsync()
+        {
+            int count = await _repository.GetTotalProductCountAsync();
+
+            return new ProductCountDto
+            {
+                TotalProductCount = count
+            };
         }
     }
 }

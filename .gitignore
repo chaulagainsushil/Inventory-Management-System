@@ -407,3 +407,11 @@ FodyWeavers.xsd
 .env
 .env.local
 .env.*.local
+
+# AppSettings - Ignore development and local settings
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.*.local.json
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json

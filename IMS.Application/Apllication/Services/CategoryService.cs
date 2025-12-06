@@ -58,5 +58,15 @@ namespace IMS.APPLICATION.Application.Services
             await _repository.DeleteAsync(id);
             return true;
         }
+
+         public async Task<CategoryCountDto> GetCategoryCountAsync()
+    {
+        var count = await _repository.GetCategoryCountAsync();
+
+        return new CategoryCountDto
+        {
+            TotalCategories = count
+        };
+    }
     }
 }

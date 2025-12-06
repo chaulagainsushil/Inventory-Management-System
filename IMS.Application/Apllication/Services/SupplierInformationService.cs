@@ -1,6 +1,7 @@
 ﻿using IMS.APPLICATION.Interface.Repository;
 using IMS.APPLICATION.Interface.Services;
 using IMS.COMMON.Dtos;
+using IMS.COMMON.Dtos.Identity;
 using IMS.Models.Models;
 using System;
 using System.Collections.Generic;
@@ -19,9 +20,20 @@ namespace IMS.APPLICATION.Apllication.Services
             _repository = repository;
         }
 
-        public async Task<IEnumerable<SuppliersInfromation>> GetAllAsync()
+
+        public async Task<List<SupplireInfromationDisplayDto>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var suppliers = await _repository.GetAllAsync();
+
+            return suppliers.Select(x => new SupplireInfromationDisplayDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                ContactPerson = x.ContactPerson,
+                PhoneNumber = x.PhoneNumber,
+                Email = x.Email,
+                Address = x.Address
+            }).ToList();
         }
 
         public async Task<SuppliersInfromation?> GetByIdAsync(int id)
@@ -45,7 +57,7 @@ namespace IMS.APPLICATION.Apllication.Services
             return supplier;
         }
 
-        public async Task<SuppliersInfromation?> UpdateAsync(int id, SupplierInformationDto dto)
+        public async Task<SuppliersInfromation?> UpdateAsync(int id, SupplireInfromationDisplayDto dto)
         {
             var supplier = await _repository.GetByIdAsync(id);
             if (supplier == null) return null;
