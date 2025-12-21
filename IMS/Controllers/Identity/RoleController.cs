@@ -3,18 +3,23 @@ using IMS.Data;
 using IMS.Models.Models.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
-
-namespace IMS.Controllers.Identity
+namespace IMS.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
     public class RoleBaseController : ControllerBase
     {
         private readonly RoleManager<IdentityRole> _roleManager;
+
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
 
@@ -26,7 +31,7 @@ namespace IMS.Controllers.Identity
             _context = context;
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpPost("Role")]
+        [HttpPost("RoleName")]
         public async Task<IActionResult> CreateRole([FromBody] string roleName)
         {
             if (string.IsNullOrEmpty(roleName))
@@ -49,7 +54,7 @@ namespace IMS.Controllers.Identity
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 
-        [HttpGet("roles")]
+        [HttpGet("Roles")]
         public IActionResult GetAllRoles()
         {
             var roles = _roleManager.Roles.ToList();
@@ -69,7 +74,7 @@ namespace IMS.Controllers.Identity
             return Ok(roleList);
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpPost("user-role")]
+        [HttpPost("Assign")]
         public async Task<IActionResult> AssignRoleToUserById([FromBody] UserRoleAssigmentModels model)
         {
             if (!ModelState.IsValid)
@@ -114,7 +119,7 @@ namespace IMS.Controllers.Identity
             return BadRequest(result.Errors);
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpGet("User-With-Role")]
+        [HttpGet("UsserWithRole")]
         public async Task<ActionResult<IEnumerable<UserRoleDto>>> GetUserRoles()
         {
             var userRoles = await _context.Set<IdentityUserRole<string>>()
@@ -127,8 +132,8 @@ namespace IMS.Controllers.Identity
 
             return Ok(userRoles);
         }
-
-        [HttpDelete("Delete-Role")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpDelete("DeleteRole")]
         public async Task<IActionResult> DeleteUserRole(string userId, string roleId)
         {
             // Find the user by their ID

@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿
+using IMS.COMMON.Dtos.Identity;
+using IMS.Models.Models.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using IMS.COMMON.Dtos.Identity;
-using IMS.Models.Models.Identity;
 
 namespace IMS.Controllers
 {
@@ -17,6 +19,7 @@ namespace IMS.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
+        
 
 
 
@@ -30,6 +33,7 @@ namespace IMS.Controllers
             _signInManager = signInManager;
             _configuration = configuration;
             _JwtSettings = jwtSettings;
+          
         }
         //This is code to insert the user information for signup
         //This method will insert the data in identity form 
@@ -95,7 +99,7 @@ namespace IMS.Controllers
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-        //this is code that create a token for the user login 
+        }  
     }
 }
+

@@ -16,4 +16,9 @@
     <ProjectReference Include="..\IMS.COMMON\IMS.COMMON.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Apllication\Services\Identity\" />
+    <Folder Include="Interface\Services\Identity\" />
+  </ItemGroup>
+
 </Project>
