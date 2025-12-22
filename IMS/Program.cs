@@ -150,6 +150,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+builder.Services.AddAuthorization();
+
 app.UseAuthorization();
 
 app.MapControllers();

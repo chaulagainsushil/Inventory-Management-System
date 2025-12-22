@@ -18,5 +18,7 @@ namespace IMS.Data
         public DbSet<Category> Category { get; set; }
         public DbSet<SuppliersInfromation> SuppliersInfromation { get; set; }
         public DbSet<Customer> Customer { get; set; }
+        public DbSet<Sale> Sale { get; set; }
+        public DbSet<SaleItem> SaleItem { get; set; }
     }
 }
