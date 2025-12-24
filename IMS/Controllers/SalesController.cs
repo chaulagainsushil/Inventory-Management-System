@@ -133,6 +133,24 @@ namespace IMS.Controllers
             });
         }
 
+        [HttpGet("monthly-revenue")]
+        public async Task<IActionResult> GetMonthlyRevenue()
+        {
+            var currentMonth = DateTime.Now.Month;
+            var currentYear = DateTime.Now.Year;
+
+            var totalRevenue = await _context.Sale
+                .Where(s => s.SaleDate.Month == currentMonth &&
+                            s.SaleDate.Year == currentYear)
+                .SumAsync(s => s.TotalAmount);
+
+            return Ok(new
+            {
+                
+                TotalRevenue = totalRevenue
+            });
+        }
+
 
 
     }

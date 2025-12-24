@@ -16,11 +16,13 @@ namespace IMS.COMMON.DependencyHandler
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ISupplierRepository, SupplierInformationRepository>();
             services.AddScoped<IProductRepository , ProductRepository>();
+            services.AddScoped<ICustomerRepository , CustomerRepository>();
 
             // 🔹 Register Services
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ISupplierInformationService, SupplierInformationService>();
             services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<ICustomerService , CustomerService>();
 
             return services;
         }
