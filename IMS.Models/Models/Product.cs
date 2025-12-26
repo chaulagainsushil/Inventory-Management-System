@@ -17,6 +17,7 @@ namespace IMS.Models.Models
         public int SupplierId { get; set; }
         public string ProductName { get; set; }
         public string Description { get; set; }
+        public decimal PricePerUnitPurchased { get; set; }
      
         public decimal PricePerUnit { get; set; }
         public string Sku { get; set; }
