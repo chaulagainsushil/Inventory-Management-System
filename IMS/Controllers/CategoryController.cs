@@ -1,4 +1,5 @@
-﻿using IMS.APPLICATION.Interface.Services;
+﻿using IMS.APPLICATION.Application.Services;
+using IMS.APPLICATION.Interface.Services;
 using IMS.COMMON.Dtos;
 using IMS.COMMON.Dtos.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,12 +62,19 @@ namespace IMS.Controllers
                 return NotFound("Category not found");
             return Ok("Category deleted successfully");
         }
-        
+
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("count")]
         public async Task<IActionResult> GetCategoryCount()
         {
             var result = await _service.GetCategoryCountAsync();
+            return Ok(result);
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("Categorydropdown")]
+        public async Task<IActionResult> GetDropdown()
+        {
+            var result = await _service.GetCategoryDropdownAsync();
             return Ok(result);
         }
     }

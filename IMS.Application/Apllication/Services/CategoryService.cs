@@ -59,14 +59,28 @@ namespace IMS.APPLICATION.Application.Services
             return true;
         }
 
-         public async Task<CategoryCountDto> GetCategoryCountAsync()
-    {
-        var count = await _repository.GetCategoryCountAsync();
-
-        return new CategoryCountDto
+        public async Task<CategoryCountDto> GetCategoryCountAsync()
         {
-            TotalCategories = count
-        };
-    }
+            var count = await _repository.GetCategoryCountAsync();
+
+            return new CategoryCountDto
+            {
+                TotalCategories = count
+            };
+        }
+        public async Task<List<CategoryDropdownDto>> GetCategoryDropdownAsync()
+        {
+            return await _repository.GetDropdownAsync();
+        }
+
+        public async Task<int> GetCategoryIdAsync(string categoryName)
+        {
+            var categoryId = await _repository.GetCategoryIdByNameAsync(categoryName);
+
+            if (categoryId == null)
+                throw new Exception("Category not found");
+
+            return categoryId.Value;
+        }
     }
 }

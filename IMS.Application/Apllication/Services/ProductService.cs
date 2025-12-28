@@ -38,15 +38,16 @@ namespace IMS.APPLICATION.Apllication.Services
                 Description = dto.Description,
                 PricePerUnit = dto.PricePerUnit,
                 SupplierId = dto.SupplierId,
-                PricePerUnitPurchased= dto.PricePerUnitPurchased,
+                PricePerUnitPurchased = dto.PricePerUnitPurchased,
                 ReoredLevel = dto.ReorderLevel,
                 Sku = dto.Sku,
                 CategoryId = dto.CategoryId,
+                StockQuantity = dto.StockQuantity, // add this to DTO first
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _repository.AddAsync(product);
+            await _repository.AddAsync(product); // ensure AddAsync actually saves  
             return product;
         }
 

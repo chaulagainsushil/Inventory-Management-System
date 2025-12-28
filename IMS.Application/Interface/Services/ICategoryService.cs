@@ -12,5 +12,7 @@ namespace IMS.APPLICATION.Interface.Services
         Task<Category?> UpdateAsync(int id, CategoryUpdateDto dto);
         Task<bool> DeleteAsync(int id);
         Task<CategoryCountDto> GetCategoryCountAsync();
+        Task<List<CategoryDropdownDto>> GetCategoryDropdownAsync();
+        Task<int> GetCategoryIdAsync(string categoryName);
     }
 }

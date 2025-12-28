@@ -1,11 +1,12 @@
 ﻿using IMS.APPLICATION.Interface.Repository;
+using IMS.COMMON.Dtos;
 using IMS.Data;
 using IMS.Models.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 
 namespace IMS.APPLICATION.Application.Repository
 {
@@ -55,9 +56,29 @@ namespace IMS.APPLICATION.Application.Repository
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task<List<CategoryDropdownDto>> GetDropdownAsync()
+        {
+            return await _context.Category
+                .Where(x => x.IsActive)
+                .Select(x => new CategoryDropdownDto
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                })
+                .ToListAsync();
+        }
+
+        public async Task<int?> GetCategoryIdByNameAsync(string categoryName)
+        {
+            return await _context.Category
+                .Where(x => x.Name == categoryName && x.IsActive)
+                .Select(x => (int?)x.Id)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<int> GetCategoryCountAsync()
         {
-            return await _context.Category.CountAsync();
+            return await _context.Category.CountAsync(c => c.IsActive);
         }
     }
 }

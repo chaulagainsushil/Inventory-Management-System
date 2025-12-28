@@ -15,7 +15,7 @@ namespace IMS.COMMON.Dtos
         public decimal PricePerUnit { get; set; }
         public string Sku { get; set; }
         public decimal PricePerUnitPurchased { get; set; }
-
+        public int StockQuantity { get; set; }
         public bool IsActive { get; set; }
         public int ReorderLevel { get; set; }
         public DateTime CreatedAt { get; set; }

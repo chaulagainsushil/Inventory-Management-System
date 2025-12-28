@@ -1,4 +1,5 @@
-﻿using IMS.Models.Models;
+﻿using IMS.COMMON.Dtos;
+using IMS.Models.Models;
 
 namespace IMS.APPLICATION.Interface.Repository
 {
@@ -10,5 +11,7 @@ namespace IMS.APPLICATION.Interface.Repository
         Task UpdateAsync(Category category);
         Task DeleteAsync(int id);
         Task<int> GetCategoryCountAsync();
+        Task<List<CategoryDropdownDto>> GetDropdownAsync();
+        Task<int?> GetCategoryIdByNameAsync(string categoryName);
     }
 }
