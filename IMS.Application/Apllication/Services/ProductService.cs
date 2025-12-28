@@ -38,6 +38,7 @@ namespace IMS.APPLICATION.Apllication.Services
                 Description = dto.Description,
                 PricePerUnit = dto.PricePerUnit,
                 SupplierId = dto.SupplierId,
+                PricePerUnitPurchased= dto.PricePerUnitPurchased,
                 ReoredLevel = dto.ReorderLevel,
                 Sku = dto.Sku,
                 CategoryId = dto.CategoryId,
