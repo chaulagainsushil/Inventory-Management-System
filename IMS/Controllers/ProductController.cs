@@ -4,6 +4,7 @@ using IMS.COMMON.Dtos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IMS.Controllers
 {
@@ -18,13 +19,15 @@ namespace IMS.Controllers
             _service = service;
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
+            Roles = "ADMIN,USER")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var products = await _service.GetAllAsync();
             return Ok(products);
         }
+
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("{id}")]
@@ -70,5 +73,34 @@ namespace IMS.Controllers
             var result = await _service.GetProductCountAsync();
             return Ok(result);
         }
+
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("reorder-alerts")]
+        public async Task<IActionResult> GetReorderAlerts()
+        {
+            var products = await _service.GetAllAsync();
+
+            var alerts = products
+                .Where(p => p.IsActive)
+                .Select(p => new
+                {
+                    productId = p.Id,
+                    productName = p.ProductName,
+                    currentStock = p.StockQuantity,
+                    reorderPoint = (int)(p.AverageDailySales * p.LeadTimeDays) + p.SafetyStock,
+                    needsReorder = p.StockQuantity <= ((p.AverageDailySales * p.LeadTimeDays) + p.SafetyStock)
+                })
+                .Where(x => x.needsReorder)
+                .ToList();
+
+            return Ok(alerts);
+        }
+
+
+
+
     }
 }
+
+

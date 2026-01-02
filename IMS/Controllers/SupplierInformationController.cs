@@ -55,5 +55,12 @@ namespace IMS.Controllers
             if (!deleted) return NotFound("Supplier not found");
             return Ok("Supplier deleted successfully");
         }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("Supplierdropdown")]
+        public async Task<IActionResult> GetDropdown()
+        {
+            var result = await _service.GetSupplierDropdownAsync();
+            return Ok(result);
+        }
     }
 }

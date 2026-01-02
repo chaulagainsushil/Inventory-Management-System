@@ -1,4 +1,5 @@
 ﻿using IMS.APPLICATION.Interface.Repository;
+using IMS.COMMON.Dtos;
 using IMS.Data;
 using IMS.Models.Models;
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +52,31 @@ namespace IMS.APPLICATION.Apllication.Repository
                 _context.SuppliersInfromation.Update(supplier);
                 await _context.SaveChangesAsync();
             }
+        }
+        public async Task<List<SupplierDropdownDto>> GetDropdownAsync()
+        {
+            return await _context.SuppliersInfromation
+                .Where(x => x.IsActive)
+                .Select(x => new SupplierDropdownDto
+                {
+                    Id = x.Id,
+                    SupplierName = x.Name
+                })
+                .ToListAsync();
+        }
+
+        public async Task<int?> GetSupplierIdByNameAsync(string Name)
+        {
+            return await _context.SuppliersInfromation
+                .Where(x => x.Name == Name && x.IsActive)
+                .Select(x => (int?)x.Id)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<int> GetSupplierCountAsync()
+        {
+            return await _context.SuppliersInfromation
+                .CountAsync(x => x.IsActive);
         }
     }
 }

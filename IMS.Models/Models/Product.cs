@@ -14,11 +14,13 @@ namespace IMS.Models.Models
         [Key]
         public int Id { get; set; }
         public int CategoryId { get; set; }
-        public int SupplierId { get; set; }
+        public int? SuppliersInfromationId { get; set; }
         public string ProductName { get; set; }
         public string Description { get; set; }
         public decimal PricePerUnitPurchased { get; set; }
-     
+
+
+
         public decimal PricePerUnit { get; set; }
         public string Sku { get; set; }
 
@@ -26,10 +28,16 @@ namespace IMS.Models.Models
         public bool IsActive { get; set; }
         public int ReoredLevel { get; set; }
         public DateTime CreatedAt { get; set; }
-        [ForeignKey("CategoryId")]
         public Category Category { get; set; }
-        [ForeignKey("SupplierId")]
-        public SuppliersInfromation SuppliersInfromation { get; set; }
+      
+        public SuppliersInfromation? SuppliersInfromation { get; set; }
+
+
+        //this is added for ROP
+        public int ReorderLevel { get; set; }  // Fix typo: ReoredLevel → ReorderLevel
+        public int SafetyStock { get; set; }
+        public int LeadTimeDays { get; set; }
+        public decimal AverageDailySales { get; set; }
 
 
     }

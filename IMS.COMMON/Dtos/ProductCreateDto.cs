@@ -17,7 +17,11 @@ namespace IMS.COMMON.Dtos
         public decimal PricePerUnitPurchased { get; set; }
         public int StockQuantity { get; set; }
         public bool IsActive { get; set; }
-        public int ReorderLevel { get; set; }
+
+        //this is are for ROp
+        public int ReorderLevel { get; set; }  // Fix typo: ReoredLevel → ReorderLevel
+        public int SafetyStock { get; set; }
+        public int LeadTimeDays { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

@@ -37,7 +37,7 @@ namespace IMS.APPLICATION.Apllication.Services
                 ProductName = dto.ProductName,
                 Description = dto.Description,
                 PricePerUnit = dto.PricePerUnit,
-                SupplierId = dto.SupplierId,
+                SuppliersInfromationId = dto.SupplierId,
                 PricePerUnitPurchased = dto.PricePerUnitPurchased,
                 ReoredLevel = dto.ReorderLevel,
                 Sku = dto.Sku,

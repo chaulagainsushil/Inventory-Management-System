@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace IMS.Models.Models
 {
     public class SuppliersInfromation
-
+          
     {
         [Key]
         public int Id { get; set; }

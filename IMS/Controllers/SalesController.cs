@@ -1,4 +1,5 @@
-﻿using IMS.COMMON.Dtos;
+﻿using IMS.APPLICATION.Apllication.Services;
+using IMS.COMMON.Dtos;
 using IMS.Data;
 using IMS.Models.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +13,7 @@ namespace IMS.Controllers
     {
         private readonly ApplicationDbContext _context;
 
+
         public SalesController(ApplicationDbContext context)
         {
             _context = context;
@@ -20,13 +22,13 @@ namespace IMS.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSale(SaleCreateDto dto)
         {
-            // Begin database transaction
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
                 decimal subTotal = 0;
                 var saleItems = new List<SaleItem>();
+                var lowStockProducts = new List<object>();
 
                 foreach (var item in dto.Items)
                 {
@@ -39,8 +41,26 @@ namespace IMS.Controllers
                     if (product.StockQuantity < item.Quantity)
                         return BadRequest($"Insufficient stock for {product.ProductName}");
 
-                    // Stock deduction
+                    // Update stock
                     product.StockQuantity -= item.Quantity;
+
+                    // ✅ CHECK REORDER POINT
+                    int calculatedROP = (int)(product.AverageDailySales * product.LeadTimeDays) + product.SafetyStock;
+
+                    if (product.StockQuantity <= calculatedROP)
+                    {
+                        lowStockProducts.Add(new
+                        {
+                            productName = product.ProductName,
+                            currentStock = product.StockQuantity,
+                            reorderPoint = calculatedROP,
+                            reorderLevel = product.ReorderLevel,
+                            suggestedOrderQty = calculatedROP + product.SafetyStock - product.StockQuantity
+                        });
+                    }
+
+                    // Update average daily sales (simple moving average)
+                    product.AverageDailySales = await CalculateAverageDailySales(product.Id);
 
                     decimal totalPrice = product.PricePerUnit * item.Quantity;
                     subTotal += totalPrice;
@@ -70,14 +90,14 @@ namespace IMS.Controllers
 
                 _context.Sale.Add(sale);
                 await _context.SaveChangesAsync();
-
                 await transaction.CommitAsync();
 
                 return Ok(new
                 {
                     message = "Sale completed successfully",
                     invoiceNo = sale.InvoiceNo,
-                    total = sale.TotalAmount
+                    total = sale.TotalAmount,
+                    reorderAlerts = lowStockProducts
                 });
             }
             catch (Exception ex)
@@ -86,71 +106,33 @@ namespace IMS.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-        [HttpGet("report/daily")]
-        public async Task<IActionResult> DailySalesReport(DateTime date)
-        {
-            var report = await _context.Sale
-                .Where(s => s.SaleDate.Date == date.Date)
-                .Select(s => new
-                {
-                    s.InvoiceNo,
-                    s.TotalAmount,
-                    s.PaymentMethod,
-                    s.SaleDate
-                })
-                .ToListAsync();
 
-            return Ok(report);
+        // Helper method to calculate average daily sales
+        private async Task<decimal> CalculateAverageDailySales(int productId)
+        {
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+
+            var totalSold = await _context.SaleItem
+                .Where(si => si.ProductId == productId &&
+                             si.Sale.SaleDate >= thirtyDaysAgo)
+                .SumAsync(si => si.Quantity);
+
+            return totalSold / 30m;
         }
-        [HttpGet("report/range")]
-        public async Task<IActionResult> SalesReportByDateRange(
-        DateTime fromDate,
-        DateTime toDate)
+        [HttpGet("monthly-total-sale")]
+        public async Task<IActionResult> GetCurrentMonthTotalSale()
         {
-            var report = await _context.Sale
-                .Where(s => s.SaleDate >= fromDate && s.SaleDate <= toDate)
-                .Select(s => new
-                {
-                    s.InvoiceNo,
-                    s.TotalAmount,
-                    s.SaleDate
-                })
-                .ToListAsync();
+            var now = DateTime.UtcNow;
 
-            return Ok(report);
-        }
-
-        [HttpGet("report/summary")]
-        public async Task<IActionResult> SalesSummary()
-        {
-            var totalSales = await _context.Sale.SumAsync(s => s.TotalAmount);
-            var totalInvoices = await _context.Sale.CountAsync();
-
-            return Ok(new
-            {
-                totalSales,
-                totalInvoices
-            });
-        }
-
-        [HttpGet("monthly-revenue")]
-        public async Task<IActionResult> GetMonthlyRevenue()
-        {
-            var currentMonth = DateTime.Now.Month;
-            var currentYear = DateTime.Now.Year;
-
-            var totalRevenue = await _context.Sale
-                .Where(s => s.SaleDate.Month == currentMonth &&
-                            s.SaleDate.Year == currentYear)
+            var totalSale = await _context.Sale
+                .Where(s =>
+                    s.SaleDate.Year == now.Year &&
+                    s.SaleDate.Month == now.Month &&
+                    s.Status == "Completed")
                 .SumAsync(s => s.TotalAmount);
 
-            return Ok(new
-            {
-                
-                TotalRevenue = totalRevenue
-            });
+            return Ok(totalSale);
         }
-
 
 
     }

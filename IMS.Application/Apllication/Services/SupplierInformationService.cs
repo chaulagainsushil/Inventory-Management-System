@@ -80,5 +80,24 @@ namespace IMS.APPLICATION.Apllication.Services
             await _repository.DeleteAsync(id);
             return true;
         }
+        public async Task<List<SupplierDropdownDto>> GetSupplierDropdownAsync()
+        {
+            return await _repository.GetDropdownAsync();
+        }
+
+        public async Task<int> GetSupplierIdAsync(string Name)
+        {
+            var Id = await _repository.GetSupplierIdByNameAsync(Name);
+
+            if (Id == null)
+                throw new Exception("Supplier not found");
+
+            return Id.Value;
+        }
+
+        public async Task<int> GetSupplierCountAsync()
+        {
+            return await _repository.GetSupplierCountAsync();
+        }
     }
 }

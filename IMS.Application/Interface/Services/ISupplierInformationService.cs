@@ -16,5 +16,8 @@ namespace IMS.APPLICATION.Interface.Services
         Task<SuppliersInfromation> CreateAsync(SupplierInformationDto dto);
         Task<SuppliersInfromation?> UpdateAsync(int id, SupplireInfromationDisplayDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<List<SupplierDropdownDto>> GetSupplierDropdownAsync();
+        Task<int> GetSupplierIdAsync(string supplierName);
+        Task<int> GetSupplierCountAsync();
     }
 }

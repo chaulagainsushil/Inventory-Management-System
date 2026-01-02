@@ -22,8 +22,8 @@ namespace IMS.COMMON.DependencyHandler
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ISupplierInformationService, SupplierInformationService>();
             services.AddScoped<IProductService, ProductService>();
-            services.AddScoped<ICustomerService , CustomerService>();
-
+            services.AddScoped<ICustomerService, CustomerService>();
+          
             return services;
         }
     }
