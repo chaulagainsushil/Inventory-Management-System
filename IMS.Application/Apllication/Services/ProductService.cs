@@ -39,12 +39,16 @@ namespace IMS.APPLICATION.Apllication.Services
                 PricePerUnit = dto.PricePerUnit,
                 SuppliersInfromationId = dto.SupplierId,
                 PricePerUnitPurchased = dto.PricePerUnitPurchased,
-                ReoredLevel = dto.ReorderLevel,
+                 
                 Sku = dto.Sku,
                 CategoryId = dto.CategoryId,
                 StockQuantity = dto.StockQuantity, // add this to DTO first
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow ,
+                // ✅ ROP Fields
+                SafetyStock = dto.SafetyStock,
+                LeadTimeDays = dto.LeadTimeDays,
+                AverageDailySales = 0  // Initial value
             };
 
             await _repository.AddAsync(product); // ensure AddAsync actually saves  
