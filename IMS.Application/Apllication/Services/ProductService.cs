@@ -87,5 +87,17 @@ namespace IMS.APPLICATION.Apllication.Services
                 TotalProductCount = count
             };
         }
+        public async Task<List<ProductDto>> GetProductsByCategoryNameAsync(string categoryName)
+        {
+            var products = await _repository.GetProductsByCategoryNameAsync(categoryName);
+
+            return products.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.ProductName,
+                Price = p.PricePerUnit,
+                CategoryName = p.Category.Name
+            }).ToList();
+        }
     }
 }

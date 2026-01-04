@@ -2,6 +2,8 @@
 using IMS.COMMON.Dtos;
 using IMS.Data;
 using IMS.Models.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,13 +20,98 @@ namespace IMS.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Check if customer exists by phone number
+        /// </summary>
+       
+        [HttpGet("check-customer/{phoneNumber}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> CheckCustomer(string phoneNumber)
+        {
+            var customer = await _context.Customer
+                .FirstOrDefaultAsync(c => c.PhoneNumber == phoneNumber);
+
+            if (customer != null)
+            {
+                return Ok(new
+                {
+                    exists = true,
+                    customer = new
+                    {
+                        customerId = customer.Id,
+                        customerName = customer.CustomerName,
+                        phoneNumber = customer.PhoneNumber,
+                        email = customer.Email,
+                        address = customer.Address
+                    }
+                });
+            }
+
+            return Ok(new
+            {
+                exists = false,
+                message = "Customer not found. Please provide details to create new customer."
+            });
+        }
+
+        /// <summary>
+        /// Create a new sale with automatic customer handling
+        /// </summary>
         [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> CreateSale(SaleCreateDto dto)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
+                int? customerId = null;
+
+                // 🔍 Customer Handling Logic
+                if (!string.IsNullOrEmpty(dto.CustomerPhoneNumber))
+                {
+                    var existingCustomer = await _context.Customer
+                        .FirstOrDefaultAsync(c => c.PhoneNumber == dto.CustomerPhoneNumber);
+
+                    if (existingCustomer != null)
+                    {
+                        // Customer exists
+                        customerId = existingCustomer.Id;
+                    }
+                    else
+                    {
+                        // Customer doesn't exist - create new
+                        if (dto.NewCustomer == null)
+                        {
+                            return BadRequest(new
+                            {
+                                error = "Customer not found",
+                                phoneNumber = dto.CustomerPhoneNumber,
+                                message = "Please provide customer details to create new customer",
+                                requiresCustomerInfo = true
+                            });
+                        }
+
+                        if (string.IsNullOrEmpty(dto.NewCustomer.CustomerName))
+                            return BadRequest("Customer name is required");
+
+                        var newCustomer = new Customer
+                        {
+                            CustomerName = dto.NewCustomer.CustomerName,
+                            PhoneNumber = dto.CustomerPhoneNumber,
+                            Email = dto.NewCustomer.Email,
+                            Address = dto.NewCustomer.Address,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        _context.Customer.Add(newCustomer);
+                        await _context.SaveChangesAsync();
+
+                        customerId = newCustomer.Id;
+                    }
+                }
+
+                // 📦 Process Sale Items
                 decimal subTotal = 0;
                 var saleItems = new List<SaleItem>();
                 var lowStockProducts = new List<object>();
@@ -38,13 +125,12 @@ namespace IMS.Controllers
                         return BadRequest($"Product not found: {item.ProductId}");
 
                     if (product.StockQuantity < item.Quantity)
-                        return BadRequest($"Insufficient stock for {product.ProductName}");
+                        return BadRequest($"Insufficient stock for {product.ProductName}. Available: {product.StockQuantity}");
 
                     // Update stock
                     product.StockQuantity -= item.Quantity;
 
-                    // Update average daily sales BEFORE ROP calculation
-                    // (so we use the most recent data)
+                    // Update average daily sales
                     product.AverageDailySales = await CalculateAverageDailySales(product.Id);
 
                     // ✅ DYNAMIC ROP CALCULATION
@@ -54,10 +140,9 @@ namespace IMS.Controllers
                     // Check if reorder needed
                     if (product.StockQuantity <= calculatedROP)
                     {
-                        // Calculate suggested order quantity intelligently
                         int suggestedQty = Math.Max(
                             calculatedROP + product.SafetyStock - product.StockQuantity,
-                            (int)(product.AverageDailySales * 7) // At least 1 week supply
+                            (int)(product.AverageDailySales * 7)
                         );
 
                         lowStockProducts.Add(new
@@ -86,11 +171,12 @@ namespace IMS.Controllers
                     });
                 }
 
+                // 💰 Create Sale
                 var sale = new Sale
                 {
                     InvoiceNo = $"INV-{DateTime.Now.Ticks}",
                     SaleDate = DateTime.UtcNow,
-                    CustomerId = dto.CustomerId,
+                    CustomerId = customerId,
                     UserId = dto.UserId,
                     SubTotal = subTotal,
                     Discount = dto.Discount,
@@ -108,7 +194,10 @@ namespace IMS.Controllers
                 {
                     message = "Sale completed successfully",
                     invoiceNo = sale.InvoiceNo,
+                    saleId = sale.SaleId,
                     total = sale.TotalAmount,
+                    customerId = customerId,
+                    customerCreated = dto.NewCustomer != null,
                     reorderAlerts = lowStockProducts,
                     alertCount = lowStockProducts.Count
                 });
@@ -116,7 +205,7 @@ namespace IMS.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return StatusCode(500, new { error = ex.Message });
+                return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
             }
         }
 
@@ -143,13 +232,13 @@ namespace IMS.Controllers
         private string GetUrgencyLevel(int currentStock, int rop, int safetyStock)
         {
             if (currentStock <= safetyStock)
-                return "CRITICAL"; // At or below safety stock
+                return "CRITICAL";
             else if (currentStock <= rop * 0.5)
-                return "HIGH"; // Less than 50% of ROP
+                return "HIGH";
             else if (currentStock <= rop * 0.75)
-                return "MEDIUM"; // Less than 75% of ROP
+                return "MEDIUM";
             else
-                return "LOW"; // Just below ROP
+                return "LOW";
         }
 
         /// <summary>
@@ -194,9 +283,10 @@ namespace IMS.Controllers
             return Ok(new
             {
                 totalAlerts = alerts.Count,
-                alerts = alerts.OrderBy(a => ((dynamic)a).urgencyLevel == "CRITICAL" ? 0 :
-                                             ((dynamic)a).urgencyLevel == "HIGH" ? 1 :
-                                             ((dynamic)a).urgencyLevel == "MEDIUM" ? 2 : 3)
+                alerts = alerts.OrderBy(a =>
+                    ((dynamic)a).urgencyLevel == "CRITICAL" ? 0 :
+                    ((dynamic)a).urgencyLevel == "HIGH" ? 1 :
+                    ((dynamic)a).urgencyLevel == "MEDIUM" ? 2 : 3)
             });
         }
 
@@ -215,7 +305,11 @@ namespace IMS.Controllers
                     s.Status == "Completed")
                 .SumAsync(s => s.TotalAmount);
 
-            return Ok(new { totalSales = totalSale, month = now.ToString("MMMM yyyy") });
+            return Ok(new
+            {
+                totalSales = totalSale,
+                month = now.ToString("MMMM yyyy")
+            });
         }
 
         /// <summary>
@@ -233,7 +327,6 @@ namespace IMS.Controllers
             int calculatedROP = (int)(product.AverageDailySales * product.LeadTimeDays)
                                 + product.SafetyStock;
 
-            // Days until stockout
             decimal daysUntilStockout = product.AverageDailySales > 0
                 ? product.StockQuantity / product.AverageDailySales
                 : 0;
@@ -249,6 +342,70 @@ namespace IMS.Controllers
                 daysUntilStockout = Math.Round(daysUntilStockout, 1),
                 shouldReorder = product.StockQuantity <= calculatedROP,
                 urgencyLevel = GetUrgencyLevel(product.StockQuantity, calculatedROP, product.SafetyStock)
+            });
+        }
+
+        /// <summary>
+        /// Get sales history with customer info
+        /// </summary>
+        [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetSales([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        {
+            var sales = await _context.Sale
+                .Include(s => s.Customer)
+                .Include(s => s.SaleItems)
+                    .ThenInclude(si => si.Product)
+                .OrderByDescending(s => s.SaleDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(s => new
+                {
+                    saleId = s.SaleId,
+                    invoiceNo = s.InvoiceNo,
+                    saleDate = s.SaleDate,
+                    customerName = s.Customer != null ? s.Customer.CustomerName : "Walk-in",
+                    customerPhone = s.Customer != null ? s.Customer.PhoneNumber : null,
+                    totalAmount = s.TotalAmount,
+                    paymentMethod = s.PaymentMethod,
+                    status = s.Status,
+                    itemCount = s.SaleItems.Count
+                })
+                .ToListAsync();
+
+            var totalCount = await _context.Sale.CountAsync();
+
+            return Ok(new
+            {
+                sales,
+                pagination = new
+                {
+                    page,
+                    pageSize,
+                    totalCount,
+                    totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                }
+            });
+        }
+        /// <summary>
+        /// Get current month revenue
+        /// </summary>
+        [HttpGet("monthly-revenue")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetCurrentMonthRevenue()
+        {
+            var now = DateTime.Now;
+
+            var revenue = await _context.Sale
+                .Where(s => s.SaleDate.Year == now.Year &&
+                            s.SaleDate.Month == now.Month)
+                .SumAsync(s => s.SubTotal);
+
+            return Ok(new
+            {
+                Month = now.ToString("MMMM"),
+                Year = now.Year,
+                Revenue = revenue
             });
         }
     }

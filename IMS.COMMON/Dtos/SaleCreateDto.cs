@@ -9,7 +9,11 @@ namespace IMS.COMMON.Dtos
 {
     public class SaleCreateDto
     {
-        public int? CustomerId { get; set; }
+        // Customer phone number for lookup (optional)
+        public string CustomerPhoneNumber { get; set; }
+
+        // New customer details (only if customer doesn't exist)
+        public NewCustomerDto NewCustomer { get; set; }
 
         [Required]
         public string UserId { get; set; }

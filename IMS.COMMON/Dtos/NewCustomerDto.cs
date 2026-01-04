@@ -1,12 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace IMS.COMMON.Dtos
 {
-    internal class NewCustomerDto
+    public class NewCustomerDto
     {
+        [Required]
+        [MaxLength(100)]
+        public string CustomerName { get; set; }
+
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [MaxLength(200)]
+        public string Address { get; set; }
     }
 }

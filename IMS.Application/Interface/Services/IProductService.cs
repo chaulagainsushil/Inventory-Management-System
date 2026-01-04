@@ -16,5 +16,6 @@ namespace IMS.APPLICATION.Interface.Services
         Task<Product?> UpdateAsync(int id, ProductUpdateDto dto);
         Task<bool> DeleteAsync(int id);
         Task<ProductCountDto> GetProductCountAsync();
+        Task<List<ProductDto>> GetProductsByCategoryNameAsync(string categoryName);
     }
 }

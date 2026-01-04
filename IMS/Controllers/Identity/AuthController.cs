@@ -65,32 +65,62 @@ namespace IMS.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LogInModelDto Dtos)
+        public async Task<IActionResult> Login([FromBody] LogInModelDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var user = await _userManager.FindByEmailAsync(Dtos.Email);
+            var user = await _userManager.FindByEmailAsync(dto.Email);
 
-            if (user != null && await _userManager.CheckPasswordAsync(user, Dtos.Password))
+            if (user != null && await _userManager.CheckPasswordAsync(user, dto.Password))
             {
-                var token = GenerateJwtToken(user.Email);
-                return Ok(new { token });
+                var token = await GenerateJwtToken(user);
+
+                return Ok(new
+                {
+                    token,
+                    user = new
+                    {
+                        user.Id,
+                        user.Name,
+                        user.Email
+                    }
+                });
             }
 
             return Unauthorized("Invalid login credentials.");
         }
 
 
-        private string GenerateJwtToken(string username)
-        {
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_JwtSettings.Value.SecretKey));
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var claims = new List<Claim>
+    {
+        // User Id
+        new Claim(ClaimTypes.NameIdentifier, user.Id),
+
+        // User Name (AspNetUsers.Name)
+        new Claim(ClaimTypes.Name, user.Name),
+
+        // Email
+        new Claim(ClaimTypes.Email, user.Email),
+
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+    };
+
+            // Roles (ADMIN / USER)
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_JwtSettings.Value.SecretKey)
+            );
+
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
@@ -98,10 +128,13 @@ namespace IMS.Controllers
                 audience: _JwtSettings.Value.Audience,
                 claims: claims,
                 expires: DateTime.Now.AddMinutes(30),
-                signingCredentials: creds);
+                signingCredentials: creds
+            );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+
 
         [HttpPost("MobileUserRegister")]
         public async Task<IActionResult> Register(RegisterDto model)

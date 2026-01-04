@@ -18,6 +18,8 @@ namespace IMS.Models.Models
         public bool IsActive { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        //new added
+        public ICollection<Sale> Sales { get; set; }
 
     }
 }

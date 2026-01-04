@@ -62,5 +62,14 @@ namespace IMS.APPLICATION.Apllication.Repository
         {
             return await _context.Product.CountAsync();
         }
+
+        public async Task<List<Product>> GetProductsByCategoryNameAsync(string categoryName)
+        {
+            return await _context.Product
+                .Include(p => p.Category)
+                .Where(p => p.Category.Name.ToLower() == categoryName.ToLower()
+                            && p.Category.IsActive)
+                .ToListAsync();
+        }
     }
 }

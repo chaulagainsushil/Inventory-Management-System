@@ -17,5 +17,7 @@ namespace IMS.Models.Models
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
 
+       
+
     }
 }

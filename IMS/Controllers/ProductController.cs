@@ -96,6 +96,21 @@ namespace IMS.Controllers
             return Ok(alerts);
         }
 
+          [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("by-category")]
+        public async Task<IActionResult> GetByCategoryName([FromQuery] string categoryName)
+        {
+            if (string.IsNullOrWhiteSpace(categoryName))
+                return BadRequest("Category name is required");
+
+            var result = await _service.GetProductsByCategoryNameAsync(categoryName);
+
+            if (!result.Any())
+                return NotFound("No products found for this category");
+
+            return Ok(result);
+        }
+
 
 
 
