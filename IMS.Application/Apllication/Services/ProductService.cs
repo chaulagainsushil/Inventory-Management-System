@@ -39,12 +39,12 @@ namespace IMS.APPLICATION.Apllication.Services
                 PricePerUnit = dto.PricePerUnit,
                 SuppliersInfromationId = dto.SupplierId,
                 PricePerUnitPurchased = dto.PricePerUnitPurchased,
-                 
+
                 Sku = dto.Sku,
                 CategoryId = dto.CategoryId,
                 StockQuantity = dto.StockQuantity, // add this to DTO first
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow ,
+                CreatedAt = DateTime.UtcNow,
                 // ✅ ROP Fields
                 SafetyStock = dto.SafetyStock,
                 LeadTimeDays = dto.LeadTimeDays,
@@ -99,5 +99,55 @@ namespace IMS.APPLICATION.Apllication.Services
                 CategoryName = p.Category.Name
             }).ToList();
         }
+
+        public async Task<ResponseDto> GetProductsByCategoryAsync()
+        {
+            var response = new ResponseDto();
+
+            try
+            {
+                // Get data from repository
+                var productsByCategory = await _repository.GetProductsByCategoryAsync();
+
+                if (productsByCategory == null || !productsByCategory.Any())
+                {
+                    response.IsSuccess = true;
+                    response.Message = "No products found";
+                    response.Data = new List<CategoryProductDto>();
+                    return response;
+                }
+
+                // Calculate total products
+                int totalProducts = productsByCategory.Sum(x => x.ProductCount);
+
+                // Calculate percentage for each category
+                var result = productsByCategory.Select(c => new CategoryProductDto
+                {
+                    CategoryId = c.CategoryId,
+                    CategoryName = c.CategoryName,
+                    ProductCount = c.ProductCount,
+                    PercentageOfTotal = totalProducts > 0
+                        ? Math.Round((c.ProductCount * 100m) / totalProducts, 2)
+                        : 0
+                }).OrderByDescending(x => x.ProductCount).ToList();
+
+                response.IsSuccess = true;
+                response.Message = "Products by category retrieved successfully";
+                response.Data = new
+                {
+                    TotalProducts = totalProducts,
+                    Categories = result
+                };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = "An error occurred while retrieving products by category";
+                response.Error = ex.Message;
+            }
+
+            return response;
+        }
     }
 }
+

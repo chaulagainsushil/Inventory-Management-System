@@ -17,5 +17,6 @@ namespace IMS.APPLICATION.Interface.Services
         Task<bool> DeleteAsync(int id);
         Task<ProductCountDto> GetProductCountAsync();
         Task<List<ProductDto>> GetProductsByCategoryNameAsync(string categoryName);
+        Task<ResponseDto> GetProductsByCategoryAsync();
     }
 }

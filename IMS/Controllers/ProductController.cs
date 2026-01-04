@@ -96,7 +96,7 @@ namespace IMS.Controllers
             return Ok(alerts);
         }
 
-          [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("by-category")]
         public async Task<IActionResult> GetByCategoryName([FromQuery] string categoryName)
         {
@@ -112,8 +112,30 @@ namespace IMS.Controllers
         }
 
 
+        [HttpGet("products-by-category")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
+        public async Task<ActionResult<ResponseDto>> GetProductsByCategory()
+        {
+            try
+            {
+                var result = await _service.GetProductsByCategoryAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResponseDto
+                {
+                    IsSuccess = false,
+                    Message = "Error retrieving products by category",
+                    Error = ex.Message
+                });
+            }
 
 
+
+
+        }
     }
 }
 

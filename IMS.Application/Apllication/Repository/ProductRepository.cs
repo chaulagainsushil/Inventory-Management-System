@@ -1,4 +1,5 @@
 ﻿using IMS.APPLICATION.Interface.Repository;
+using IMS.COMMON.Dtos;
 using IMS.Data;
 using IMS.Models.Models;
 using Microsoft.EntityFrameworkCore; // <-- Add this using directive
@@ -69,6 +70,19 @@ namespace IMS.APPLICATION.Apllication.Repository
                 .Include(p => p.Category)
                 .Where(p => p.Category.Name.ToLower() == categoryName.ToLower()
                             && p.Category.IsActive)
+                .ToListAsync();
+        }
+        public async Task<List<CategoryProductCountDto>> GetProductsByCategoryAsync()
+        {
+            return await _context.Product
+                .Include(p => p.Category)
+                .GroupBy(p => new { p.CategoryId, p.Category.Name })
+                .Select(g => new CategoryProductCountDto
+                {
+                    CategoryId = g.Key.CategoryId,
+                    CategoryName = g.Key.Name,
+                    ProductCount = g.Count()
+                })
                 .ToListAsync();
         }
     }

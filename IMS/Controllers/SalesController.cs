@@ -23,7 +23,7 @@ namespace IMS.Controllers
         /// <summary>
         /// Check if customer exists by phone number
         /// </summary>
-       
+
         [HttpGet("check-customer/{phoneNumber}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> CheckCustomer(string phoneNumber)
@@ -407,6 +407,116 @@ namespace IMS.Controllers
                 Year = now.Year,
                 Revenue = revenue
             });
+        }
+
+        [HttpGet("top-selling-products")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
+        public async Task<ActionResult<IEnumerable<ProductSalesDto>>> GetTopSellingProducts(int topCount = 10)
+        {
+            try
+            {
+                // Get total quantity sold
+                var totalQuantitySold = await _context.SaleItem.SumAsync(si => si.Quantity);
+
+                if (totalQuantitySold == 0)
+                {
+                    return Ok(new List<ProductSalesDto>());
+                }
+
+                // Get top selling products
+                var topProducts = await _context.SaleItem
+                    .Include(si => si.Product)
+                    .GroupBy(si => new { si.ProductId, si.Product.ProductName })
+                    .Select(g => new
+                    {
+                        ProductId = g.Key.ProductId,
+                        ProductName = g.Key.ProductName,
+                        TotalQuantity = g.Sum(si => si.Quantity),
+                        TotalSalesAmount = g.Sum(si => si.Quantity * si.UnitPrice)
+                    })
+                    .OrderByDescending(x => x.TotalQuantity)
+                    .Take(topCount)
+                    .ToListAsync();
+
+                // Map to DTO with percentage calculation
+                var result = topProducts.Select(p => new ProductSalesDto
+                {
+                    ProductId = p.ProductId,
+                    ProductName = p.ProductName,
+                    TotalQuantitySold = p.TotalQuantity,
+                    SalesPercentage = Math.Round((p.TotalQuantity * 100m) / totalQuantitySold, 2),
+                    TotalSalesAmount = p.TotalSalesAmount
+                }).ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving top selling products", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get products sales with date range filter
+        /// </summary>
+        [HttpGet("top-selling-products-by-date")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
+        public async Task<ActionResult<IEnumerable<ProductSalesDto>>> GetTopSellingProductsByDate(
+            [FromQuery] DateTime startDate,
+            [FromQuery] DateTime endDate,
+            [FromQuery] int topCount = 10)
+        {
+            try
+            {
+                if (startDate > endDate)
+                {
+                    return BadRequest(new { message = "Start date must be before end date" });
+                }
+
+                // Get total quantity sold in date range
+                var totalQuantitySold = await _context.SaleItem
+                    .Where(si => si.Sale.SaleDate >= startDate && si.Sale.SaleDate <= endDate)
+                    .SumAsync(si => si.Quantity);
+
+                if (totalQuantitySold == 0)
+                {
+                    return Ok(new List<ProductSalesDto>());
+                }
+
+                // Get top selling products by date range
+                var topProducts = await _context.SaleItem
+                    .Where(si => si.Sale.SaleDate >= startDate && si.Sale.SaleDate <= endDate)
+                    .Include(si => si.Product)
+                    .Include(si => si.Sale)
+                    .GroupBy(si => new { si.ProductId, si.Product.ProductName })
+                    .Select(g => new
+                    {
+                        ProductId = g.Key.ProductId,
+                        ProductName = g.Key.ProductName,
+                        TotalQuantity = g.Sum(si => si.Quantity),
+                        TotalSalesAmount = g.Sum(si => si.Quantity * si.UnitPrice)
+                    })
+                    .OrderByDescending(x => x.TotalQuantity)
+                    .Take(topCount)
+                    .ToListAsync();
+
+                var result = topProducts.Select(p => new ProductSalesDto
+                {
+                    ProductId = p.ProductId,
+                    ProductName = p.ProductName,
+                    TotalQuantitySold = p.TotalQuantity,
+                    SalesPercentage = Math.Round((p.TotalQuantity * 100m) / totalQuantitySold, 2),
+                    TotalSalesAmount = p.TotalSalesAmount
+                }).ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving top selling products", error = ex.Message });
+            }
         }
     }
 }

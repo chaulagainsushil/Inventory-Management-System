@@ -1,4 +1,5 @@
-﻿using IMS.Models.Models;
+﻿using IMS.COMMON.Dtos;
+using IMS.Models.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,5 +17,6 @@ namespace IMS.APPLICATION.Interface.Repository
         Task DeleteAsync(int id);
         Task<int> GetTotalProductCountAsync();
         Task<List<Product>> GetProductsByCategoryNameAsync(string categoryName);
+        Task<List<CategoryProductCountDto>> GetProductsByCategoryAsync();
     }
 }
