@@ -518,5 +518,81 @@ namespace IMS.Controllers
                 return StatusCode(500, new { message = "Error retrieving top selling products", error = ex.Message });
             }
         }
+
+        [HttpGet("user-sales-summary")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetUserSalesSummary()
+        {
+            var totalSalesAmount = await _context.Sale
+                .SumAsync(x => x.TotalAmount);
+
+            var result = await (
+                from sale in _context.Sale
+                join user in _context.Users
+                    on sale.UserId equals user.Id
+                group sale by new { sale.UserId, user.Name } into g
+                select new
+                {
+                    UserId = g.Key.UserId,
+                    UserName = g.Key.Name,
+            
+                    SaleCount = g.Count(),
+                    TotalAmount = g.Sum(x => x.TotalAmount),
+                    Percentage = totalSalesAmount == 0
+                        ? 0
+                        : Math.Round((g.Sum(x => x.TotalAmount) / totalSalesAmount) * 100, 2)
+                })
+                .OrderByDescending(x => x.TotalAmount)
+                .ToListAsync();
+
+            return Ok(result);
+        }
+
+
+
+        [HttpGet("payment-method-summary")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetPaymentMethodSummary()
+        {
+            // Get latest sale date
+            var latestSaleDate = await _context.Sale
+                .MaxAsync(x => (DateTime?)x.SaleDate);
+
+            if (latestSaleDate == null)
+                return Ok(new List<object>());
+
+            int year = latestSaleDate.Value.Year;
+            int month = latestSaleDate.Value.Month;
+
+            var monthlySales = _context.Sale
+                .Where(x => x.SaleDate.Year == year &&
+                            x.SaleDate.Month == month);
+
+            var totalMonthlyAmount = await monthlySales
+                .SumAsync(x => x.TotalAmount);
+
+            var result = await monthlySales
+                .GroupBy(x => x.PaymentMethod)
+                .Select(g => new
+                {
+                    PaymentMethod = g.Key,
+                    SaleCount = g.Count(),
+                    TotalAmount = g.Sum(x => x.TotalAmount),
+                    Percentage = totalMonthlyAmount == 0
+                        ? 0
+                        : Math.Round((g.Sum(x => x.TotalAmount) / totalMonthlyAmount) * 100, 2)
+                })
+                .OrderByDescending(x => x.TotalAmount)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Month = month,
+                Year = year,
+                Data = result
+            });
+        }
+
+
     }
 }

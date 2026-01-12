@@ -136,6 +136,13 @@ namespace IMS.Controllers
 
 
         }
+        [HttpGet("Productdropdown")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetProductDropdown()
+        {
+            var products = await _service.GetProductDropdownAsync();
+            return Ok(products);
+        }
     }
 }
 

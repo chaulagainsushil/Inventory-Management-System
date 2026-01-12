@@ -148,6 +148,10 @@ namespace IMS.APPLICATION.Apllication.Services
 
             return response;
         }
+        public async Task<List<ProductDropdownDto>> GetProductDropdownAsync()
+        {
+            return await _repository.GetProductDropdownAsync();
+        }
     }
 }
 

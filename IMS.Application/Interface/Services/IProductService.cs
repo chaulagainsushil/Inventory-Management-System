@@ -18,5 +18,6 @@ namespace IMS.APPLICATION.Interface.Services
         Task<ProductCountDto> GetProductCountAsync();
         Task<List<ProductDto>> GetProductsByCategoryNameAsync(string categoryName);
         Task<ResponseDto> GetProductsByCategoryAsync();
+        Task<List<ProductDropdownDto>> GetProductDropdownAsync();
     }
 }

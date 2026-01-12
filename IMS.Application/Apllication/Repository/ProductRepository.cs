@@ -85,5 +85,15 @@ namespace IMS.APPLICATION.Apllication.Repository
                 })
                 .ToListAsync();
         }
+        public async Task<List<ProductDropdownDto>> GetProductDropdownAsync()
+        {
+            return await _context.Product
+                .Select(p => new ProductDropdownDto
+                {
+                    Id = p.Id,
+                    Name = p.ProductName
+                })
+                .ToListAsync();
+        }
     }
 }
