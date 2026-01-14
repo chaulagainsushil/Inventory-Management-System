@@ -395,7 +395,7 @@ namespace IMS.Controllers
         public async Task<IActionResult> GetCurrentMonthRevenue()
         {
             var now = DateTime.Now;
-
+          
             var revenue = await _context.Sale
                 .Where(s => s.SaleDate.Year == now.Year &&
                             s.SaleDate.Month == now.Month)
