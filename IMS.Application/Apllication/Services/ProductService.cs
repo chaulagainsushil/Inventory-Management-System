@@ -152,6 +152,24 @@ namespace IMS.APPLICATION.Apllication.Services
         {
             return await _repository.GetProductDropdownAsync();
         }
+    
+
+    public async Task<bool> AddProductQuantityAsync(int productId, int quantityToAdd)
+        {
+            if (quantityToAdd <= 0)
+                throw new ArgumentException("Quantity must be greater than zero.");
+
+            var product = await _repository.GetByIdAsync(productId);
+
+            if (product == null)
+                return false;
+
+            // ✅ ADD to remaining quantity
+            product.StockQuantity += quantityToAdd;
+
+            await _repository.UpdateAsync(product);
+            return true;
+        }
     }
 }
 

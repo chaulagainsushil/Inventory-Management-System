@@ -4,7 +4,7 @@ using IMS.APPLICATION.Application.Repository;
 using IMS.APPLICATION.Application.Services;
 using IMS.APPLICATION.Interface.Repository;
 using IMS.APPLICATION.Interface.Services;
-using Microsoft.Extensions.DependencyInjection;
+using IMS.APPLICATION.Application.Services; // or the correct namespace where EmailService is defined
 
 namespace IMS.COMMON.DependencyHandler
 {
@@ -23,7 +23,9 @@ namespace IMS.COMMON.DependencyHandler
             services.AddScoped<ISupplierInformationService, SupplierInformationService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICustomerService, CustomerService>();
-          
+            services.AddScoped<IEmailService, EmailService >();
+            services.AddScoped<GmailTokenService>();
+
             return services;
         }
     }

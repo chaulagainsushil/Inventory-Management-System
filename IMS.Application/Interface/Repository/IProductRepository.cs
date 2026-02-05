@@ -19,5 +19,7 @@ namespace IMS.APPLICATION.Interface.Repository
         Task<List<Product>> GetProductsByCategoryNameAsync(string categoryName);
         Task<List<CategoryProductCountDto>> GetProductsByCategoryAsync();
         Task<List<ProductDropdownDto>> GetProductDropdownAsync();
+        Task<Product?> GetByIdQAsync(int id);
+        Task UpdateQAsync(Product product);
     }
 }

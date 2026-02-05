@@ -1,4 +1,5 @@
 ﻿using IMS.APPLICATION.Apllication.Services;
+using IMS.APPLICATION.Interface.Services;
 using IMS.COMMON.Dtos;
 using IMS.Data;
 using IMS.Models.Models;
@@ -14,10 +15,12 @@ namespace IMS.Controllers
     public class SalesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public SalesController(ApplicationDbContext context)
+        public SalesController(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -133,15 +136,18 @@ namespace IMS.Controllers
                     // Update average daily sales
                     product.AverageDailySales = await CalculateAverageDailySales(product.Id);
 
+                    // ✅ CALCULATE DYNAMIC SAFETY STOCK
+                    int dynamicSafetyStock = await CalculateDynamicSafetyStock(product.Id, product.LeadTimeDays);
+
                     // ✅ DYNAMIC ROP CALCULATION
                     int calculatedROP = (int)(product.AverageDailySales * product.LeadTimeDays)
-                                        + product.SafetyStock;
+                                        + dynamicSafetyStock;
 
                     // Check if reorder needed
                     if (product.StockQuantity <= calculatedROP)
                     {
                         int suggestedQty = Math.Max(
-                            calculatedROP + product.SafetyStock - product.StockQuantity,
+                            calculatedROP + dynamicSafetyStock - product.StockQuantity,
                             (int)(product.AverageDailySales * 7)
                         );
 
@@ -153,9 +159,9 @@ namespace IMS.Controllers
                             reorderPoint = calculatedROP,
                             averageDailySales = product.AverageDailySales,
                             leadTimeDays = product.LeadTimeDays,
-                            safetyStock = product.SafetyStock,
+                            safetyStock = dynamicSafetyStock,
                             suggestedOrderQty = suggestedQty,
-                            urgencyLevel = GetUrgencyLevel(product.StockQuantity, calculatedROP, product.SafetyStock)
+                            urgencyLevel = GetUrgencyLevel(product.StockQuantity, calculatedROP, dynamicSafetyStock)
                         });
                     }
 
@@ -189,6 +195,35 @@ namespace IMS.Controllers
                 _context.Sale.Add(sale);
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                // 📧 Send email alert if there are low stock products
+                if (lowStockProducts.Count > 0)
+                {
+                    var alertDtos = lowStockProducts.Select(p => new LowStockAlertDto
+                    {
+                        ProductName = ((dynamic)p).productName,
+                        CurrentStock = ((dynamic)p).currentStock,
+                        ReorderPoint = ((dynamic)p).reorderPoint,
+                        AverageDailySales = ((dynamic)p).averageDailySales,
+                        LeadTimeDays = ((dynamic)p).leadTimeDays,
+                        SafetyStock = ((dynamic)p).safetyStock,
+                        UrgencyLevel = ((dynamic)p).urgencyLevel
+                    }).ToList();
+
+                    // Send async without blocking response
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _emailService.SendLowStockAlertAsync(alertDtos);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log error but don't fail the sale
+                            Console.WriteLine($"Failed to send email alert: {ex.Message}");
+                        }
+                    });
+                }
 
                 return Ok(new
                 {
@@ -227,6 +262,44 @@ namespace IMS.Controllers
         }
 
         /// <summary>
+        /// Calculate dynamic safety stock using: Safety Stock = Z-score × σ × √Lead Time
+        /// Z-score = 1.65 (95% service level)
+        /// </summary>
+        private async Task<int> CalculateDynamicSafetyStock(int productId, int leadTimeDays)
+        {
+            const decimal zScore = 1.65m; // 95% service level
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+
+            // Get daily sales for the last 30 days
+            var dailySales = await _context.SaleItem
+                .Include(si => si.Sale)
+                .Where(si => si.ProductId == productId &&
+                             si.Sale.SaleDate >= thirtyDaysAgo &&
+                             si.Sale.Status == "Completed")
+                .GroupBy(si => si.Sale.SaleDate.Date)
+                .Select(g => new { Date = g.Key, Quantity = g.Sum(si => si.Quantity) })
+                .ToListAsync();
+
+            if (!dailySales.Any())
+            {
+                // No sales history - return default safety stock
+                return 10;
+            }
+
+            // Calculate standard deviation of demand
+            var quantities = dailySales.Select(ds => (decimal)ds.Quantity).ToList();
+            var average = quantities.Average();
+            var sumOfSquares = quantities.Sum(q => Math.Pow((double)(q - average), 2));
+            var variance = sumOfSquares / quantities.Count;
+            var standardDeviation = (decimal)Math.Sqrt(variance);
+
+            // Safety Stock = Z × σ × √Lead Time
+            var safetyStock = zScore * standardDeviation * (decimal)Math.Sqrt(leadTimeDays);
+
+            return (int)Math.Ceiling(safetyStock);
+        }
+
+        /// <summary>
         /// Determine urgency level for reordering
         /// </summary>
         private string GetUrgencyLevel(int currentStock, int rop, int safetyStock)
@@ -255,13 +328,16 @@ namespace IMS.Controllers
 
             foreach (var product in products)
             {
+                // Calculate dynamic safety stock
+                int dynamicSafetyStock = await CalculateDynamicSafetyStock(product.Id, product.LeadTimeDays);
+
                 int calculatedROP = (int)(product.AverageDailySales * product.LeadTimeDays)
-                                    + product.SafetyStock;
+                                    + dynamicSafetyStock;
 
                 if (product.StockQuantity <= calculatedROP)
                 {
                     int suggestedQty = Math.Max(
-                        calculatedROP + product.SafetyStock - product.StockQuantity,
+                        calculatedROP + dynamicSafetyStock - product.StockQuantity,
                         (int)(product.AverageDailySales * 7)
                     );
 
@@ -273,9 +349,9 @@ namespace IMS.Controllers
                         reorderPoint = calculatedROP,
                         averageDailySales = product.AverageDailySales,
                         leadTimeDays = product.LeadTimeDays,
-                        safetyStock = product.SafetyStock,
+                        safetyStock = dynamicSafetyStock,
                         suggestedOrderQty = suggestedQty,
-                        urgencyLevel = GetUrgencyLevel(product.StockQuantity, calculatedROP, product.SafetyStock)
+                        urgencyLevel = GetUrgencyLevel(product.StockQuantity, calculatedROP, dynamicSafetyStock)
                     });
                 }
             }
@@ -324,8 +400,11 @@ namespace IMS.Controllers
             if (product == null)
                 return NotFound("Product not found");
 
+            // Calculate dynamic safety stock
+            int dynamicSafetyStock = await CalculateDynamicSafetyStock(product.Id, product.LeadTimeDays);
+
             int calculatedROP = (int)(product.AverageDailySales * product.LeadTimeDays)
-                                + product.SafetyStock;
+                                + dynamicSafetyStock;
 
             decimal daysUntilStockout = product.AverageDailySales > 0
                 ? product.StockQuantity / product.AverageDailySales
@@ -337,11 +416,11 @@ namespace IMS.Controllers
                 currentStock = product.StockQuantity,
                 averageDailySales = product.AverageDailySales,
                 leadTimeDays = product.LeadTimeDays,
-                safetyStock = product.SafetyStock,
+                safetyStock = dynamicSafetyStock,
                 calculatedROP = calculatedROP,
                 daysUntilStockout = Math.Round(daysUntilStockout, 1),
                 shouldReorder = product.StockQuantity <= calculatedROP,
-                urgencyLevel = GetUrgencyLevel(product.StockQuantity, calculatedROP, product.SafetyStock)
+                urgencyLevel = GetUrgencyLevel(product.StockQuantity, calculatedROP, dynamicSafetyStock)
             });
         }
 
@@ -395,7 +474,7 @@ namespace IMS.Controllers
         public async Task<IActionResult> GetCurrentMonthRevenue()
         {
             var now = DateTime.Now;
-          
+
             var revenue = await _context.Sale
                 .Where(s => s.SaleDate.Year == now.Year &&
                             s.SaleDate.Month == now.Month)
@@ -535,7 +614,7 @@ namespace IMS.Controllers
                 {
                     UserId = g.Key.UserId,
                     UserName = g.Key.Name,
-            
+
                     SaleCount = g.Count(),
                     TotalAmount = g.Sum(x => x.TotalAmount),
                     Percentage = totalSalesAmount == 0
@@ -594,5 +673,35 @@ namespace IMS.Controllers
         }
 
 
+
+        [HttpPost("test-email")]
+        [AllowAnonymous] // For testing only
+        public async Task<IActionResult> TestEmail()
+        {
+            try
+            {
+                var testAlerts = new List<LowStockAlertDto>
+        {
+            new LowStockAlertDto
+            {
+                ProductName = "Test Product",
+                CurrentStock = 5,
+                ReorderPoint = 20,
+                AverageDailySales = 2.5m,
+                LeadTimeDays = 7,
+                SafetyStock = 10,
+                UrgencyLevel = "HIGH"
+            }
+        };
+
+                await _emailService.SendLowStockAlertAsync(testAlerts);
+
+                return Ok(new { message = "Test email sent successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
+            }
+        }
     }
 }

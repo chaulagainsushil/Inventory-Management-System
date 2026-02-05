@@ -19,5 +19,7 @@ namespace IMS.APPLICATION.Interface.Services
         Task<List<ProductDto>> GetProductsByCategoryNameAsync(string categoryName);
         Task<ResponseDto> GetProductsByCategoryAsync();
         Task<List<ProductDropdownDto>> GetProductDropdownAsync();
+        Task<bool> AddProductQuantityAsync(int productId, int quantityToAdd);
+
     }
 }

@@ -36,6 +36,11 @@ namespace IMS.APPLICATION.Apllication.Repository
                 .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
         }
 
+        public async Task<Product?> GetByIdQAsync(int id)
+        {
+            return await _context.Product.FirstOrDefaultAsync(p => p.Id == id);
+        }
+
         public async Task AddAsync(Product product)
         {
             await _context.Product.AddAsync(product);
@@ -43,6 +48,12 @@ namespace IMS.APPLICATION.Apllication.Repository
         }
 
         public async Task UpdateAsync(Product product)
+        {
+            _context.Product.Update(product);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateQAsync(Product product)
         {
             _context.Product.Update(product);
             await _context.SaveChangesAsync();

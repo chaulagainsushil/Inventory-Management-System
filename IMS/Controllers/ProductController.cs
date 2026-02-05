@@ -143,6 +143,26 @@ namespace IMS.Controllers
             var products = await _service.GetProductDropdownAsync();
             return Ok(products);
         }
+
+
+        [HttpPatch("{id}/add-quantity")]
+        public async Task<IActionResult> AddQuantity(
+        int id,
+        [FromBody] AddProductQuantityDto dto)
+        {
+            if (dto.QuantityToAdd <= 0)
+                return BadRequest("Quantity must be greater than zero.");
+
+            var result = await _service.AddProductQuantityAsync(id, dto.QuantityToAdd);
+
+            if (!result)
+                return NotFound("Product not found.");
+
+            return Ok(new
+            {
+                message = "Product quantity added successfully."
+            });
+        }
     }
 }
 

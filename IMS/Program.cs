@@ -1,5 +1,6 @@
 ﻿using IMS.COMMON.DependencyHandler;
 using IMS.Data;
+using IMS.Models.Models;
 using IMS.Models.Models.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -10,26 +11,32 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-builder.Services.AddControllers(); // Add controllers to the service container
+// Controllers
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+// Email Settings
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 
+// JWT Settings
 builder.Services.Configure<JwtSetting>(
-    builder.Configuration.GetSection("JwtSettings")
-);
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    builder.Configuration.GetSection("JwtSettings"));
 
+// Swagger with JWT
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "IMS API", Version = "v1" });
 
-    // Add JWT Bearer auth to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -55,23 +62,22 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
-// 1. Add CORS services - Read allowed origins from appsettings.json
+// CORS
 builder.Services.AddCors(options =>
 {
     var allowedOriginsCommaSeparated = builder.Configuration.GetSection("AllowedOrigins").Get<string>() ?? string.Empty;
-
     var allowedOrigins = allowedOriginsCommaSeparated.Split(",", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
     options.AddPolicy("MyAppPolicy", policy =>
     {
         policy.WithOrigins(allowedOrigins)
-            .AllowAnyMethod()                 // GET, POST, PUT, DELETE, etc.
-            .AllowAnyHeader()                 // Content-Type, Authorization, etc.
-            .AllowCredentials();              // IMPORTANT for authentication cookies/tokens
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 
-//to use the content from appsetting.json
+// JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSetting>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -87,30 +93,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
         };
-        options.Events = new JwtBearerEvents
-        {
-            OnAuthenticationFailed = context =>
-            {
-                Console.WriteLine("Authentication failed: " + context.Exception.Message);
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
-            {
-                Console.WriteLine("Token validated successfully");
-                return Task.CompletedTask;
-            },
-            OnChallenge = context =>
-            {
-                Console.WriteLine("OnChallenge triggered");
-                return Task.CompletedTask;
-            }
-        };
     });
 
+// Authorization
+builder.Services.AddAuthorization();
 
+// Identity Options
 builder.Services.Configure<IdentityOptions>(options =>
 {
-    // Password settings.
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = true;
@@ -118,30 +108,21 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequiredLength = 6;
     options.Password.RequiredUniqueChars = 1;
 
-    // Lockout settings.
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 
-    // User settings.
     options.User.AllowedUserNameCharacters =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
     options.User.RequireUniqueEmail = false;
 });
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// ✅ Custom services (DO NOT BUILD INSIDE THIS)
 builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
-app.UseCors("MyAppPolicy");  // Use your policy name here
-
-// Configure the HTTP request pipeline.
+// Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -149,11 +130,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("MyAppPolicy");
 
-builder.Services.AddAuthorization();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
 app.Run();
