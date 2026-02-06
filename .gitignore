@@ -414,4 +414,5 @@ FodyWeavers.xsd
 **/appsettings.*.local.json
 appsettings.Development.json
 appsettings.Local.json
-appsettings.*.local.json
+appsettings.*.local.jsonIMS/credentials.json
+**/credentials.json
