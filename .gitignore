@@ -416,3 +416,4 @@ appsettings.Development.json
 appsettings.Local.json
 appsettings.*.local.jsonIMS/credentials.json
 **/credentials.json
+IMS/credentials.json
