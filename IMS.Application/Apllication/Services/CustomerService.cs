@@ -1,4 +1,5 @@
-﻿using IMS.APPLICATION.Interface.Repository;
+﻿using IMS.APPLICATION.Apllication.Repository;
+using IMS.APPLICATION.Interface.Repository;
 using IMS.APPLICATION.Interface.Services;
 using IMS.COMMON.Dtos;
 using IMS.Models.Models;
@@ -62,6 +63,26 @@ namespace IMS.APPLICATION.Apllication.Services
         {
             await _repository.DeleteAsync(id);
         }
-    }
 
+        public async Task<CustomerDataDto> GetCustomerByPhoneAsync(string phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+                throw new ArgumentException("Phone number cannot be empty.");
+
+            var customer = await _repository.GetByPhoneNumberAsync(phoneNumber);
+
+            if (customer == null)
+                return null;
+
+            // Map Entity → DTO
+            return new CustomerDataDto
+            {
+                Id = customer.Id,
+                CustomerName = customer.CustomerName,
+                PhoneNumber = customer.PhoneNumber,
+                Email = customer.Address,
+                Address = customer.Address
+            };
+        }
+    }
 }

@@ -14,5 +14,6 @@ namespace IMS.APPLICATION.Interface.Repository
         Task AddAsync(Customer customer);
         Task UpdateAsync(Customer customer);
         Task DeleteAsync(int id);
+        Task<Customer> GetByPhoneNumberAsync(string phoneNumber);
     }
 }

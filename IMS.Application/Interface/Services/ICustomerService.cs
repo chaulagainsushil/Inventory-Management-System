@@ -15,5 +15,6 @@ namespace IMS.APPLICATION.Interface.Services
         Task CreateCustomerAsync(CustomerDto dto);
         Task UpdateCustomerAsync(int id, CustomerDto dto);
         Task DeleteCustomerAsync(int id);
+        Task<CustomerDataDto> GetCustomerByPhoneAsync(string phoneNumber);
     }
 }

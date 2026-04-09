@@ -16,7 +16,8 @@ namespace IMS.COMMON.DependencyHandler
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ISupplierRepository, SupplierInformationRepository>();
             services.AddScoped<IProductRepository , ProductRepository>();
-            services.AddScoped<ICustomerRepository , CustomerRepository>();
+            services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<IReportRepository , ReportRepository>();
 
             // 🔹 Register Services
             services.AddScoped<ICategoryService, CategoryService>();
@@ -25,6 +26,7 @@ namespace IMS.COMMON.DependencyHandler
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IEmailService, EmailService >();
             services.AddScoped<GmailTokenService>();
+            services.AddScoped<IReportService,ReportService>();
 
             return services;
         }

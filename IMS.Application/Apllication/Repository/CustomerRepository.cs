@@ -50,6 +50,11 @@ namespace IMS.APPLICATION.Apllication.Repository
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task<Customer> GetByPhoneNumberAsync(string phoneNumber)
+        {
+            return await _context.Customer
+                .FirstOrDefaultAsync(c => c.PhoneNumber == phoneNumber && c.IsActive);
+        }
     }
 
 }

@@ -51,6 +51,18 @@ namespace IMS.Controllers
             await _service.DeleteCustomerAsync(id);
             return Ok("Customer deleted successfully");
         }
+
+
+        [HttpGet("by-phone/{phoneNumber}")]
+        public async Task<IActionResult> GetByPhoneNumber(string phoneNumber)
+        {
+            var customer = await _service.GetCustomerByPhoneAsync(phoneNumber);
+
+            if (customer == null)
+                return NotFound(new { message = $"No customer found with phone: {phoneNumber}" });
+
+            return Ok(customer);
+        }
     }
 
 }
