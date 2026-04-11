@@ -80,11 +80,7 @@ namespace IMS.APPLICATION.Apllication.Services
             await _repository.DeleteAsync(id);
             return true;
         }
-        public async Task<List<SupplierDropdownDto>> GetSupplierDropdownAsync()
-        {
-            return await _repository.GetDropdownAsync();
-        }
-
+      
         public async Task<int> GetSupplierIdAsync(string Name)
         {
             var Id = await _repository.GetSupplierIdByNameAsync(Name);
@@ -98,6 +94,10 @@ namespace IMS.APPLICATION.Apllication.Services
         public async Task<int> GetSupplierCountAsync()
         {
             return await _repository.GetSupplierCountAsync();
+        }
+        public async Task<IEnumerable<SupplierDropdownDto>> GetSupplierDropdownAsync()
+        {
+            return await _repository.GetSupplierDropdownAsync();
         }
     }
 }

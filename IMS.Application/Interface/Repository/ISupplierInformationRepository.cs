@@ -15,8 +15,8 @@ namespace IMS.APPLICATION.Interface.Repository
         Task AddAsync(SuppliersInfromation supplier);
         Task UpdateAsync(SuppliersInfromation supplier);
         Task DeleteAsync(int id);
-        Task<List<SupplierDropdownDto>> GetDropdownAsync();
         Task<int?> GetSupplierIdByNameAsync(string supplierName);
         Task<int> GetSupplierCountAsync();
+        Task<IEnumerable<SupplierDropdownDto>> GetSupplierDropdownAsync();
     }
 }

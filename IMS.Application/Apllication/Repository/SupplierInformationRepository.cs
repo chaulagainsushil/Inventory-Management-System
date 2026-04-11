@@ -53,17 +53,6 @@ namespace IMS.APPLICATION.Apllication.Repository
                 await _context.SaveChangesAsync();
             }
         }
-        public async Task<List<SupplierDropdownDto>> GetDropdownAsync()
-        {
-            return await _context.SuppliersInfromation
-                .Where(x => x.IsActive)
-                .Select(x => new SupplierDropdownDto
-                {
-                    Id = x.Id,
-                    SupplierName = x.Name
-                })
-                .ToListAsync();
-        }
 
         public async Task<int?> GetSupplierIdByNameAsync(string Name)
         {
@@ -77,6 +66,19 @@ namespace IMS.APPLICATION.Apllication.Repository
         {
             return await _context.SuppliersInfromation
                 .CountAsync(x => x.IsActive);
+        }
+
+        public async Task<IEnumerable<SupplierDropdownDto>> GetSupplierDropdownAsync()
+        {
+            return await _context.SuppliersInfromation
+                .Where(s => s.IsActive)           // only active suppliers
+                .OrderBy(s => s.Name)
+                .Select(s => new SupplierDropdownDto
+                {
+                    Id = s.Id,
+                    SupplierName = s.Name
+                })
+                .ToListAsync();
         }
     }
 }
