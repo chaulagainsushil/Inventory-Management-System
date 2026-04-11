@@ -80,7 +80,7 @@ namespace IMS.APPLICATION.Apllication.Services
                 Id = customer.Id,
                 CustomerName = customer.CustomerName,
                 PhoneNumber = customer.PhoneNumber,
-                Email = customer.Address,
+                Email = customer.Email,
                 Address = customer.Address
             };
         }
