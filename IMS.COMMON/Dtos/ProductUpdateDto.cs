@@ -14,8 +14,10 @@ public  class ProductUpdateDto
         public string ProductName { get; set; }
         public string Description { get; set; }
         public decimal PricePerUnit { get; set; }
+        public int LeadTimeDays { get; set; }
+        public int StockQuantity { get; set; }
+        public decimal PricePerUnitPurchased { get; set; }
         public string Sku { get; set; }
-        public string QuantityPerUnit { get; set; }
       
     }
 }

@@ -16,10 +16,11 @@ namespace IMS.APPLICATION.Interface.Repository
         Task UpdateAsync(Product product);
         Task DeleteAsync(int id);
         Task<int> GetTotalProductCountAsync();
-        Task<List<Product>> GetProductsByCategoryNameAsync(string categoryName);
+        
         Task<List<CategoryProductCountDto>> GetProductsByCategoryAsync();
         Task<List<ProductDropdownDto>> GetProductDropdownAsync();
         Task<Product?> GetByIdQAsync(int id);
         Task UpdateQAsync(Product product);
+        //Task<IEnumerable<Product>> GetProductsByCategoryNameSkuAsync(string categoryName);
     }
 }

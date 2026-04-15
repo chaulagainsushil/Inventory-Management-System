@@ -61,9 +61,14 @@ namespace IMS.APPLICATION.Apllication.Services
             if (product == null) return null;
 
             product.ProductName = dto.ProductName;
+            product.SuppliersInfromationId = dto.SupplierId;
             product.Description = dto.Description;
             product.PricePerUnit = dto.PricePerUnit;
             product.CategoryId = dto.CategoryId;
+            product.Sku = dto.Sku;
+            product.LeadTimeDays = dto.LeadTimeDays;
+            product.PricePerUnitPurchased = dto.PricePerUnitPurchased;
+            product.StockQuantity = dto.StockQuantity;
 
             await _repository.UpdateAsync(product);
             return product;
@@ -87,18 +92,7 @@ namespace IMS.APPLICATION.Apllication.Services
                 TotalProductCount = count
             };
         }
-        public async Task<List<ProductDto>> GetProductsByCategoryNameAsync(string categoryName)
-        {
-            var products = await _repository.GetProductsByCategoryNameAsync(categoryName);
-
-            return products.Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.ProductName,
-                Price = p.PricePerUnit,
-                CategoryName = p.Category.Name
-            }).ToList();
-        }
+     
 
         public async Task<ResponseDto> GetProductsByCategoryAsync()
         {

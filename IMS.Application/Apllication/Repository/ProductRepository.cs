@@ -106,5 +106,14 @@ namespace IMS.APPLICATION.Apllication.Repository
                 })
                 .ToListAsync();
         }
+        public async Task<IEnumerable<Product>> GetProductsByCategoryNameSkuAsync(string categoryName)
+        {
+            return await _context.Product
+                .Include(p => p.Category)
+                .Include(p => p.SuppliersInfromation)
+                .Where(p => p.Category.Name.ToLower() == categoryName.ToLower() && p.IsActive)
+                .ToListAsync();
+        }
+
     }
 }
