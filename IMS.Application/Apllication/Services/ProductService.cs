@@ -92,7 +92,7 @@ namespace IMS.APPLICATION.Apllication.Services
                 TotalProductCount = count
             };
         }
-     
+
 
         public async Task<ResponseDto> GetProductsByCategoryAsync()
         {
@@ -146,9 +146,9 @@ namespace IMS.APPLICATION.Apllication.Services
         {
             return await _repository.GetProductDropdownAsync();
         }
-    
 
-    public async Task<bool> AddProductQuantityAsync(int productId, int quantityToAdd)
+
+        public async Task<bool> AddProductQuantityAsync(int productId, int quantityToAdd)
         {
             if (quantityToAdd <= 0)
                 throw new ArgumentException("Quantity must be greater than zero.");
@@ -164,6 +164,30 @@ namespace IMS.APPLICATION.Apllication.Services
             await _repository.UpdateAsync(product);
             return true;
         }
+
+        public async Task<IEnumerable<ProductSearchDto>> GetProductsByCategoryAsync(int categoryId)
+        {
+            if (categoryId <= 0)
+                throw new ArgumentException("Invalid category ID.");
+
+            var products = await _repository.GetProductsByCategoryAsync(categoryId);
+
+            return products.Select(p => new ProductSearchDto
+            {
+                Id = p.Id,
+                ProductName = p.ProductName,
+                Description = p.Description,
+                PricePerUnit = p.PricePerUnit,
+                PricePerUnitPurchased = p.PricePerUnitPurchased,
+                Sku = p.Sku,
+                StockQuantity = p.StockQuantity,
+                IsActive = p.IsActive,
+                ReorderLevel = p.ReorderLevel,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category?.Name
+            });
+        }
     }
 }
+
 

@@ -115,5 +115,14 @@ namespace IMS.APPLICATION.Apllication.Repository
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(int categoryId)
+        {
+            return await _context.Product
+                .Include(p => p.Category)
+                .Include(p => p.SuppliersInfromation)
+                .Where(p => p.CategoryId == categoryId && p.IsActive)
+                .ToListAsync();
+        }
+
     }
 }

@@ -96,8 +96,8 @@ namespace IMS.Controllers
             return Ok(alerts);
         }
 
-      
-        
+
+
 
 
         [HttpGet("products-by-category")]
@@ -151,7 +151,29 @@ namespace IMS.Controllers
                 message = "Product quantity added successfully."
             });
         }
-       
+
+        [HttpGet("by-category/{categoryId}")]
+        public async Task<IActionResult> GetProductsByCategory(int categoryId)
+        {
+            try
+            {
+                var products = await _service.GetProductsByCategoryAsync(categoryId);
+
+                if (!products.Any())
+                    return NotFound(new { message = $"No products found for category ID {categoryId}." });
+
+                return Ok(products);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred.", detail = ex.Message });
+            }
+        }
+
     }
 }
 
